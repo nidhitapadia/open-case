@@ -1,9 +1,14 @@
 package com.afkl.cases.df.api.v1.airports.controller;
 
 import com.afkl.cases.df.api.common.TravelAPIConstants;
+import com.afkl.cases.df.api.v1.airports.resource.Airport;
 import com.afkl.cases.df.service.AirportService;
+import org.springframework.hateoas.PagedResources;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 import static com.afkl.cases.df.api.common.TravelAPIConstants.AIRPORTS_ENDPOINT_URL;
 import static com.afkl.cases.df.api.common.TravelAPIConstants.API_V1_BASE_ENDPOINT_URL;
@@ -41,7 +46,14 @@ public class AirportController {
                                          @RequestParam(defaultValue = "en", required = false) final String lang,
                                          @RequestParam(required = false) final Integer page,
                                          @RequestParam(required = false) final Integer size) {
-        return ResponseEntity.ok(airportService.getAirports(term, lang, page, size));
+        PagedResources<Airport> airports = airportService.getAirports(term, lang, page, size);
+        Optional.ofNullable(airports)
+                .ifPresent(airportResources -> airportResources
+                        .forEach(airport -> airport.add(ControllerLinkBuilder
+                                .linkTo(AirportController.class)
+                                .slash(airport.getCode())
+                                .withSelfRel())));
+        return ResponseEntity.ok(airports);
     }
 
     /**

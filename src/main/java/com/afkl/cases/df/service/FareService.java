@@ -1,32 +1,36 @@
 package com.afkl.cases.df.service;
 
+import com.afkl.cases.df.api.exception.TravelAPIException;
+import com.afkl.cases.df.api.v1.airports.resource.Airport;
 import com.afkl.cases.df.api.v1.fares.resources.Fare;
-import com.afkl.cases.df.config.data.TravelAPIConfigurationData;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
+import com.afkl.cases.df.repository.AirportRepository;
+import com.afkl.cases.df.repository.FareRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 /**
  * The class to get fare details
  */
 @Service
+@Slf4j
 public class FareService {
-    private final OAuth2RestTemplate oAuth2RestTemplate;
-    private final TravelAPIConfigurationData travelAPIConfigurationData;
+
+    private final FareRepository fareRepository;
+    private final AirportRepository airportRepository;
 
     /**
      * Instantiates a new Fare service.
      *
-     * @param oAuth2RestTemplate         the oAuth2RestTemplate
-     * @param travelAPIConfigurationData the travel api configuration data
+     * @param fareRepository the fareRepository
      */
-    public FareService(final OAuth2RestTemplate oAuth2RestTemplate, final TravelAPIConfigurationData travelAPIConfigurationData) {
-        this.oAuth2RestTemplate = oAuth2RestTemplate;
-        this.travelAPIConfigurationData = travelAPIConfigurationData;
+    public FareService(final FareRepository fareRepository,
+                       final AirportRepository airportRepository) {
+        this.fareRepository = fareRepository;
+        this.airportRepository = airportRepository;
     }
 
     /**
@@ -38,15 +42,30 @@ public class FareService {
      * @return the fare
      */
     public Fare getFare(final String origin, final String destination, final String currency) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(travelAPIConfigurationData.getFaresUri());
-        Optional.ofNullable(currency).ifPresent(s -> builder.queryParam("currency", s));
-        return oAuth2RestTemplate.getForObject(builder.build().toUriString(), Fare.class, getUriParamsMap(origin, destination));
+
+        try {
+            CompletableFuture<Fare> asyncFare = fareRepository.getFare(origin, destination, currency);
+            CompletableFuture<Airport> asyncOrigin = airportRepository.getAirportForCode(origin);
+            CompletableFuture<Airport> asyncDestination = airportRepository.getAirportForCode(destination);
+
+            return asyncFare.thenCombineAsync(asyncOrigin, (f, o) -> {
+                f.setOrigin(o);
+                return f;
+            })
+                    .thenCombineAsync(asyncDestination, (f, d) -> {
+                        f.setDestination(d);
+                        return f;
+                    })
+                    .get();
+        } catch (InterruptedException e) {
+            log.error("InterruptedException with message ({}) and cause ({}) while getting fare details", e.getMessage(), e.getCause());
+            throw new TravelAPIException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (ExecutionException e) {
+            log.error("ExecutionException with message ({}) and cause ({}) while getting fare details", e.getMessage(), e.getCause());
+            throw new TravelAPIException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+
     }
 
-    private Map<String, String> getUriParamsMap(final String origin, final String destination) {
-        Map<String, String> uriParams = new HashMap<>();
-        uriParams.put("origin", origin);
-        uriParams.put("destination", destination);
-        return uriParams;
-    }
 }
