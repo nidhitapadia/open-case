@@ -4,6 +4,7 @@ import com.afkl.cases.df.api.common.TravelAPIConstants;
 import com.afkl.cases.df.api.v1.fares.resources.Fare;
 import com.afkl.cases.df.service.FareService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -35,10 +36,11 @@ public class FareController {
      * @return the fare
      */
     @GetMapping(TravelAPIConstants.FARES_ENDPOINT_URL)
-    public Fare calculateFare(@PathVariable("origin") String origin,
-                              @PathVariable("destination") String destination,
-                              @RequestParam(value = "currency", defaultValue = "EUR") String currency) {
-        return fareService.getFare(origin, destination, currency);
+    public ResponseEntity<Fare> calculateFare(@PathVariable("origin") String origin,
+                                              @PathVariable("destination") String destination,
+                                              @RequestParam(value = "currency", defaultValue = "EUR") String currency) {
+        Fare fare = fareService.getFare(origin, destination, currency);
+        return fare != null ? ResponseEntity.ok(fare) : ResponseEntity.notFound().build();
     }
 
 }

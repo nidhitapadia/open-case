@@ -5,13 +5,16 @@ import com.afkl.cases.df.api.v1.airports.resource.Airport;
 import com.afkl.cases.df.service.AirportService;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
 import static com.afkl.cases.df.api.common.TravelAPIConstants.AIRPORTS_ENDPOINT_URL;
 import static com.afkl.cases.df.api.common.TravelAPIConstants.API_V1_BASE_ENDPOINT_URL;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 /**
  * The controller for airports resources
@@ -47,12 +50,7 @@ public class AirportController {
                                          @RequestParam(required = false) final Integer page,
                                          @RequestParam(required = false) final Integer size) {
         PagedResources<Airport> airports = airportService.getAirports(term, lang, page, size);
-        Optional.ofNullable(airports)
-                .ifPresent(airportResources -> airportResources
-                        .forEach(airport -> airport.add(ControllerLinkBuilder
-                                .linkTo(AirportController.class)
-                                .slash(airport.getCode())
-                                .withSelfRel())));
+        Optional.ofNullable(airports).ifPresent(airportResources -> airportResources.forEach(airport -> airport.add(linkTo(AirportController.class).slash(airport.getCode()).withSelfRel())));
         return ResponseEntity.ok(airports);
     }
 
@@ -64,6 +62,7 @@ public class AirportController {
      */
     @GetMapping(TravelAPIConstants.AIRPORT_CODE_ENDPOINT_URL)
     public ResponseEntity<?> getAirportWithCode(@PathVariable("code") String code) {
-        return ResponseEntity.ok(airportService.getAirportForCode(code));
+        Airport airport = airportService.getAirportForCode(code);
+        return airport != null ? ResponseEntity.ok(airport) : ResponseEntity.notFound().build();
     }
 }

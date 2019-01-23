@@ -24,8 +24,9 @@ public class TravelAPIExceptionHandler {
      * @return the response entity
      */
     @ExceptionHandler(HttpServerErrorException.class)
-    public HttpEntity handleGlobalException(HttpServerErrorException e) {
-        return new ResponseEntity(e.getStatusCode());
+    public HttpEntity handleGlobalException(HttpServerErrorException ex) {
+        log.error("Handling unknown HttpServerErrorException with message ({}})", ex.getMessage());
+        return new ResponseEntity<Object>("Error !!", ex.getStatusCode());
     }
 
     /**
@@ -96,6 +97,6 @@ public class TravelAPIExceptionHandler {
     @ExceptionHandler({Exception.class})
     public ResponseEntity<?> handleException(Exception ex) {
         log.error("Handling unknown Exception of type ({}) with message ({}})", ex.getClass().getName(), ex.getMessage());
-        return new ResponseEntity<Object>("Bad Request", HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<Object>("Error !!", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
