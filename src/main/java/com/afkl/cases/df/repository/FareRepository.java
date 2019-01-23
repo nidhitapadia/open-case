@@ -2,6 +2,7 @@ package com.afkl.cases.df.repository;
 
 import com.afkl.cases.df.api.v1.fares.resources.Fare;
 import com.afkl.cases.df.config.data.TravelAPIConfigurationData;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.client.Traverson;
 import org.springframework.scheduling.annotation.Async;
@@ -15,6 +16,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Component
+@Slf4j
 public class FareRepository {
 
     private final OAuth2RestTemplate oAuth2RestTemplate;
@@ -36,6 +38,8 @@ public class FareRepository {
      */
     @Async
     public CompletableFuture<Fare> getFare(final String origin, final String destination, final String currency) {
+        log.info("Getting fare details for origin({}), destination({}) and currency({})", origin, destination, currency);
+
         return CompletableFuture.supplyAsync(() -> getTraverson(origin, destination, currency)
                 .follow()
                 .toObject(Fare.class));

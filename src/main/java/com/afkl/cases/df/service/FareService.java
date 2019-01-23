@@ -42,7 +42,7 @@ public class FareService {
      * @return the fare
      */
     public Fare getFare(final String origin, final String destination, final String currency) {
-
+        log.info("Getting fare details for origin({}), destination({}) and currency({})", origin, destination, currency);
         try {
             CompletableFuture<Fare> asyncFare = fareRepository.getFare(origin, destination, currency);
             CompletableFuture<Airport> asyncOrigin = airportRepository.getAirportForCode(origin);
@@ -64,8 +64,6 @@ public class FareService {
             log.error("ExecutionException with message ({}) and cause ({}) while getting fare details", e.getMessage(), e.getCause());
             throw new TravelAPIException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-
     }
 
 }

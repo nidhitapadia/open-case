@@ -46,7 +46,7 @@ public class AirportRepository {
      */
     @Async
     public CompletableFuture<PagedResources<Airport>> getAirports(final String term, final String lang, final Integer page, final Integer size) {
-
+        log.info("Getting airports list for term({}), lang({}), page({]), size({})", term, lang, page, size);
         ParameterizedTypeReference<PagedResources<Airport>> pagedResourcesParameterizedTypeReference =
                 new ParameterizedTypeReference<PagedResources<Airport>>() {
                 };
@@ -63,6 +63,8 @@ public class AirportRepository {
      */
     @Async
     public CompletableFuture<Airport> getAirportForCode(final String code) {
+        log.info("Getting airport details for code({})", code);
+
         return CompletableFuture.supplyAsync(() -> getTraverson(UriComponentsBuilder.fromUriString(travelAPIConfigurationData.getAirportCodeUri())
                 .buildAndExpand(code)
                 .toUri())

@@ -49,6 +49,7 @@ public class AirportService {
      * @return the airports
      */
     public PagedResources<Airport> getAirports(final String term, final String lang, final Integer page, final Integer size) {
+        log.info("Getting airports list for term({}), lang({}), page({]), size({})", term, lang, page, size);
 
         try {
             return airportRepository.getAirports(term, lang, page, size).get();
@@ -68,6 +69,8 @@ public class AirportService {
      * @return the airport for code
      */
     public Airport getAirportForCode(final String code) {
+        log.info("Getting airport details for code({})", code);
+
         try {
             return airportRepository.getAirportForCode(code).get();
         } catch (InterruptedException e) {

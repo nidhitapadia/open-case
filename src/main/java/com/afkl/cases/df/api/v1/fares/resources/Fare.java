@@ -15,4 +15,9 @@ public class Fare {
     Currency currency;
     Airport origin, destination;
 
+    /**
+     * Instantiates a new Fare.
+     */
+    public Fare() {
+    }
 }
